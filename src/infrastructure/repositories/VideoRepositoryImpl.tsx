@@ -4,10 +4,10 @@ import Cookies from "js-cookie";
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export class VideoRepositoryImpl {
-  // 🔸 Extrai token e personId de forma centralizada
+  // Extrai token e personId de forma centralizada
   private getAuthData() {
     const token = Cookies.get("auth_token");
-    const personId = Cookies.get("person_id"); // ← lê do cookie
+    const personId = Cookies.get("person_id");
     if (!token || !personId) throw new Error("Usuário não autenticado");
     return { token, personId };
   }
@@ -16,7 +16,7 @@ export class VideoRepositoryImpl {
     const { token, personId } = this.getAuthData();
 
     const formData = new FormData();
-    formData.append("files", file); // 🟢 nome correto
+    formData.append("files", file);
 
     const response = await fetch(`${baseUrl}/video/upload/${personId}`, {
       method: "POST",

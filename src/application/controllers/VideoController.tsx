@@ -1,11 +1,10 @@
-// application/controllers/VideoController.ts
 import { VideoService } from "../services/VideoService";
 
 export class VideoController {
   constructor(private videoService = new VideoService()) {}
 
   async handleUpload(file: File) {
-    return this.videoService.executeUpload(file); // retorna array<VideoDTO>
+    return this.videoService.executeUpload(file);
   }
 
   async getVideos() {

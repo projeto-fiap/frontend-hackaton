@@ -12,7 +12,7 @@ export class AuthService {
       headers: {
         Authorization: "Basic " + btoa(`${email}:${password}`),
       },
-      credentials: "include", // bom manter se o backend usa sessão ou cookie
+      credentials: "include",
     });
 
     if (!response.ok) throw new Error("Falha no login");
@@ -29,7 +29,7 @@ export class AuthService {
 
     // Decodifica o token
     const payload = JSON.parse(atob(token.split(".")[1]));
-    const personId = payload.id?.toString(); // agora vem do backend
+    const personId = payload.id?.toString();
 
     // Salva o ID também
     if (personId) {

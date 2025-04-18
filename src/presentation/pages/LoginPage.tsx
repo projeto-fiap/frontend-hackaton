@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Link } from "react-router-dom";
+import Cookies from "js-cookie";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -9,6 +10,13 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = Cookies.get("token");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +68,7 @@ export function LoginPage() {
 
           <button
             type="submit"
-            className="w-full border border-[#B11226] text-white font-semibold py-2 rounded-md hover:bg-[#B11226] transition duration-300"
+            className="w-full border border-[#B11226] text-white font-semibold py-2 rounded-md hover:bg-[#B11226] transition duration-300 cursor-pointer active:scale-95 focus:outline-none"
           >
             CONECTAR
           </button>

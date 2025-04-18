@@ -34,7 +34,7 @@ export function CadastroPage() {
         email,
       });
       setErrorMsg("");
-      navigate("/"); // redireciona para login
+      navigate("/");
     } catch {
       setErrorMsg("Erro ao cadastrar. Verifique os dados.");
     }
@@ -94,7 +94,7 @@ export function CadastroPage() {
 
           <button
             type="submit"
-            className="w-full border border-[#B11226] text-white font-semibold py-2 rounded-md hover:bg-[#B11226] transition duration-300"
+            className="w-full border border-[#B11226] text-white font-semibold py-2 rounded-md hover:bg-[#B11226] transition duration-300 cursor-pointer active:scale-95 focus:outline-none"
           >
             CADASTRAR
           </button>
