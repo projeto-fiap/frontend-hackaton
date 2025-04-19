@@ -4,7 +4,7 @@ describe("AuthService", () => {
   it("deve logar com admin", async () => {
     const service = new AuthService();
     const user = await service.login("admin", "admin");
-    expect(user.name).toBe("Administrador");
+    expect(user.nome).toBe("Administrador");
   });
 
   it("deve falhar com credenciais erradas", async () => {
