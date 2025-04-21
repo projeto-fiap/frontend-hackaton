@@ -7,44 +7,45 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export class AuthService {
   async login(email: string, password: string): Promise<User> {
-    const response = await fetch(`${baseUrl}/person/login`, {
+    // 1) login básico (igual ao seu)
+    const res = await fetch(`${baseUrl}/person/login`, {
       method: "GET",
-      headers: {
-        Authorization: "Basic " + btoa(`${email}:${password}`),
-      },
-      credentials: "include",
+      headers: { Authorization: "Basic " + btoa(`${email}:${password}`) },
     });
+    if (!res.ok) throw new Error("Falha no login");
 
-    if (!response.ok) throw new Error("Falha no login");
-
-    const token = await response.text();
-    console.log("Token JWT recebido:", token);
-
-    // Salva o token
+    const token = await res.text();
     Cookies.set("auth_token", token, {
       expires: 1,
-      secure: process.env.NODE_ENV === "production",
+      secure: import.meta.env.PROD,
       sameSite: "Strict",
     });
 
-    // Decodifica o token
+    // 2) decodifica só para pegar o e‑mail
     const payload = JSON.parse(atob(token.split(".")[1]));
-    const personId = payload.id?.toString();
+    const userEmail = payload.sub as string;
 
-    // Salva o ID também
-    if (personId) {
-      Cookies.set("person_id", personId, {
-        expires: 1,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Strict",
-      });
-    }
+    // 3) busca lista de pessoas
+    const listRes = await fetch(`${baseUrl}/person`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!listRes.ok) throw new Error("Falha ao buscar pessoas");
+
+    const people: PersonResponse[] = await listRes.json();
+    const me = people.find((p) => p.email === userEmail);
+
+    const personId = me?.id?.toString() ?? "unknown";
+    Cookies.set("person_id", personId, {
+      expires: 1,
+      secure: import.meta.env.PROD,
+      sameSite: "Strict",
+    });
 
     return {
-      id: personId ?? "unknown",
-      nome: payload.nome ?? payload.sub,
-      cpf: payload.cpf ?? "",
-      email: payload.sub,
+      id: personId,
+      nome: me?.nome ?? userEmail,
+      cpf: me?.cpf ?? "",
+      email: userEmail,
     };
   }
 
@@ -67,20 +68,14 @@ export class AuthService {
 
   getCurrentUser(): User | null {
     const token = Cookies.get("auth_token");
-    const id = Cookies.get("person_id");
+    if (!token) return null;
 
-    if (!token || !id) return null;
-
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return {
-        id,
-        nome: payload.nome ?? payload.sub,
-        cpf: payload.cpf ?? "",
-        email: payload.sub,
-      };
-    } catch {
-      return null;
-    }
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return {
+      id: Cookies.get("person_id") ?? "unknown",
+      nome: payload.nome ?? payload.sub,
+      cpf: payload.cpf ?? "",
+      email: payload.sub,
+    };
   }
 }

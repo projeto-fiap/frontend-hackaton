@@ -3,14 +3,15 @@ import type { Config } from "jest";
 const config: Config = {
   preset: "ts-jest",
   testEnvironment: "jsdom",
-  transform: {
-    "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.app.json" }],
-  },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  moduleFileExtensions: ["ts", "tsx", "js", "jsx"],
   moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@/(.*)$": "<rootDir>/src/$1", // seu alias "@/"
   },
-  testMatch: ["**/tests/**/*.(test).[jt]s?(x)"],
+  globals: {
+    // 👇  manda o ts‑jest usar a config de cima
+    "ts-jest": { tsconfig: "tsconfig.jest.json" },
+  },
 };
 
 export default config;

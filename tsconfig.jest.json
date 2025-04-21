@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "jsx": "react-jsx",           
+      "esModuleInterop": true,      
+      "allowSyntheticDefaultImports": true,
+      "types": ["jest", "jsdom"],    
+      "noEmit": true
+    },
+    "include": ["src", "tests"]
+  }
+  
