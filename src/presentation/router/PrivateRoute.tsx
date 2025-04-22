@@ -6,7 +6,7 @@ interface Props {
 }
 
 export function PrivateRoute({ children }: Props) {
-  const token = Cookies.get("token");
+  const token = Cookies.get("auth_token");
 
   if (!token) {
     return <Navigate to="/" replace />;

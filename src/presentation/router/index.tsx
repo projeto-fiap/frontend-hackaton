@@ -6,7 +6,7 @@ import { PrivateRoute } from "./PrivateRoute";
 import Cookies from "js-cookie";
 
 export function AppRouter() {
-  const token = Cookies.get("token");
+  const token = Cookies.get("auth_token");
 
   return (
     <BrowserRouter>

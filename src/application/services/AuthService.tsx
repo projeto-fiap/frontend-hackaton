@@ -7,7 +7,6 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export class AuthService {
   async login(email: string, password: string): Promise<User> {
-    // 1) login básico (igual ao seu)
     const res = await fetch(`${baseUrl}/person/login`, {
       method: "GET",
       headers: { Authorization: "Basic " + btoa(`${email}:${password}`) },
@@ -17,15 +16,13 @@ export class AuthService {
     const token = await res.text();
     Cookies.set("auth_token", token, {
       expires: 1,
-      secure: import.meta.env.PROD,
+      secure: window.location.protocol === "https:",
       sameSite: "Strict",
     });
 
-    // 2) decodifica só para pegar o e‑mail
     const payload = JSON.parse(atob(token.split(".")[1]));
-    const userEmail = payload.sub as string;
+    const userEmail = payload.preferred_username ?? payload.sub;
 
-    // 3) busca lista de pessoas
     const listRes = await fetch(`${baseUrl}/person`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -34,15 +31,16 @@ export class AuthService {
     const people: PersonResponse[] = await listRes.json();
     const me = people.find((p) => p.email === userEmail);
 
-    const personId = me?.id?.toString() ?? "unknown";
-    Cookies.set("person_id", personId, {
-      expires: 1,
-      secure: import.meta.env.PROD,
-      sameSite: "Strict",
-    });
+    if (me) {
+      Cookies.set("person_id", String(me.id), {
+        expires: 1,
+        secure: window.location.protocol === "https:",
+        sameSite: "Strict",
+      });
+    }
 
     return {
-      id: personId,
+      id: me ? String(me.id) : "",
       nome: me?.nome ?? userEmail,
       cpf: me?.cpf ?? "",
       email: userEmail,
@@ -72,10 +70,10 @@ export class AuthService {
 
     const payload = JSON.parse(atob(token.split(".")[1]));
     return {
-      id: Cookies.get("person_id") ?? "unknown",
-      nome: payload.nome ?? payload.sub,
+      id: Cookies.get("person_id") ?? "",
+      nome: payload.nome ?? payload.preferred_username ?? payload.sub,
       cpf: payload.cpf ?? "",
-      email: payload.sub,
+      email: payload.preferred_username ?? payload.sub,
     };
   }
 }

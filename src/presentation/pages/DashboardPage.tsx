@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { VideoController } from "../../application/controllers/VideoController";
 import { VideoService } from "../../application/services/VideoService";
 import UserMenu from "../components/header/UserMenu";
@@ -18,6 +18,7 @@ interface VideoItem {
 export function DashboardPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [videos, setVideos] = useState<VideoItem[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const videoController = new VideoController(new VideoService());
 
   const mapStatus = (status: string): VideoStatus => {
@@ -31,24 +32,20 @@ export function DashboardPage() {
     }
   };
 
+  // carrega vídeos existentes
   useEffect(() => {
     const fetchExistingVideos = async () => {
       const token = Cookies.get("auth_token");
       const personId = Cookies.get("person_id");
-
       if (!token || !personId) return;
 
       try {
         const res = await fetch(`${baseUrl}/video/${personId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         if (!res.ok) throw new Error("Erro ao carregar vídeos");
 
         const data = await res.json();
-
         setVideos(
           data.map((v: any) => ({
             id: v.id.toString(),
@@ -66,16 +63,23 @@ export function DashboardPage() {
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setSelectedFiles([...e.target.files]);
+    const files = e.target.files;
+    if (!files) return;
+    setSelectedFiles((prev) => [...prev, ...Array.from(files)]);
+  };
+
+  // limpa seleção
+  const handleClear = () => {
+    setSelectedFiles([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
   const handleUpload = async () => {
     for (const file of selectedFiles) {
       try {
-        const response = await videoController.handleUpload(file);
-        const [dto] = response;
+        const [dto] = await videoController.handleUpload(file);
         setVideos((prev) => [
           ...prev,
           {
@@ -86,13 +90,13 @@ export function DashboardPage() {
           },
         ]);
       } catch (err) {
-        console.error("Erro ao enviar:", err);
+        console.error("Erro ao enviar vídeo:", err);
       }
     }
-
-    setSelectedFiles([]);
+    handleClear();
   };
 
+  // polling para atualizar status
   useEffect(() => {
     const interval = setInterval(async () => {
       const updatedVideos = await Promise.all(
@@ -105,7 +109,7 @@ export function DashboardPage() {
               status: mapStatus(updated.status),
               url: updated.url,
             };
-          } catch (err) {
+          } catch {
             return video;
           }
         })
@@ -120,28 +124,36 @@ export function DashboardPage() {
     <div className="min-h-screen bg-black text-white p-6">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-semibold">Gerenciador de Vídeos</h1>
-
         <div className="flex items-center gap-4">
           <div>
             <label className="cursor-pointer inline-flex items-center space-x-2 bg-[#B11226] hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md">
               <span>+ Adicionar vídeos</span>
               <input
+                ref={fileInputRef}
                 type="file"
                 multiple
                 onChange={handleFileChange}
                 className="hidden"
               />
             </label>
+
             {selectedFiles.length > 0 && (
-              <button
-                onClick={handleUpload}
-                className="ml-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md"
-              >
-                Enviar ({selectedFiles.length})
-              </button>
+              <>
+                <button
+                  onClick={handleUpload}
+                  className="ml-4 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-md"
+                >
+                  Enviar ({selectedFiles.length})
+                </button>
+                <button
+                  onClick={handleClear}
+                  className="ml-2 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md"
+                >
+                  Cancelar
+                </button>
+              </>
             )}
           </div>
-
           <UserMenu />
         </div>
       </div>
